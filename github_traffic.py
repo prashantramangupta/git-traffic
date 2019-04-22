@@ -54,5 +54,5 @@ def write_to_db(repo, git_traffic_rec):
 
 
 def update_github_traffic(repo):
-    _collect(token="06c764f71cc92355c8bdcdf2788176a6445c16bb", org="singnet", repo=repo)
+    _collect(token="", org="singnet", repo=repo)
     print("success"
