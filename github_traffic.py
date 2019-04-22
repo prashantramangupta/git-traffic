@@ -2,9 +2,6 @@ from datetime import datetime, timedelta
 
 import github
 
-from common.repository import Repository
-
-
 def _collect(token, org, repo):
     gh = github.GitHub(access_token=token)
     repositries_data = gh.orgs(org).repos.get(per_page="1000")
@@ -30,16 +27,18 @@ def _collect(token, org, repo):
             date = rec['commit']['author']['date'][:-10]
             commit_count_dict[date] = commit_count_dict.get(date, 0) + 1
         views_14_days = gh.repos(org, repo_nm).traffic.views.get()
-        count = 0
-        for view_per_day in views_14_days['views']:
+
+        last_idx = len(views_14_days['views'])
+        if last_idx > 0:
+            view_per_day = views_14_days['views'][last_idx-1]
             commit_count = commit_count_dict.get(view_per_day['timestamp'][:-10], 0)
             git_traffic_rec = [repo_nm, view_per_day['timestamp'][:-10], view_per_day['count'], view_per_day['uniques'],
                                commit_count, forks, stargazers_count, watchers_count, datetime.utcnow(),
                                datetime.utcnow(), view_per_day['count'], view_per_day['uniques'], commit_count, forks,
                                stargazers_count, watchers_count, datetime.utcnow()]
-            count = +1
-            write_to_db(repo, git_traffic_rec=git_traffic_rec)
-        print(count)
+            if str(datetime.utcnow())[:10] == view_per_day['timestamp'][:-10]:
+                print('recorded for today')
+                write_to_db(repo, git_traffic_rec=git_traffic_rec)
 
 
 def write_to_db(repo, git_traffic_rec):
@@ -55,11 +54,5 @@ def write_to_db(repo, git_traffic_rec):
 
 
 def update_github_traffic(repo):
-    _collect(token="", org="singnet", repo=repo)
-    print("success")
-
-
-if __name__ == "__main__":
-    # net_id = 999 points to default database
-    repo = Repository(net_id=998)
-    update_github_traffic(repo=repo)
+    _collect(token="06c764f71cc92355c8bdcdf2788176a6445c16bb", org="singnet", repo=repo)
+    print("success"

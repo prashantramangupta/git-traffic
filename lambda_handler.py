@@ -3,6 +3,7 @@ import re
 import traceback
 
 from common.constant import NETWORKS
+from common.constant import GITHUB_NET_ID
 from common.repository import Repository
 from common.utils import Utils
 from github_traffic import update_github_traffic
@@ -14,15 +15,12 @@ db = dict((netId, Repository(net_id=netId)) for netId in NETWORKS.keys())
 def request_handler(event, context):
     print(event)
     try:
-        stage = event['requestContext']['stage']
-        net_id = NETWORKS_NAME[stage]
+        net_id = GITHUB_NET_ID
         if db[net_id].connection is None:
             raise Exception('database connection is not initialized')
-
-        print('update service status', net_id)
-        obj_git_traffic = update_github_traffic(repo=db[net_id])
+        update_github_traffic(repo=db[net_id])
+        print("success")
     except Exception as e:
         print(repr(e))
-        # obj_util.report_slack(1, repr(e))
         traceback.print_exc()
     return
