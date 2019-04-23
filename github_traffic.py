@@ -1,6 +1,9 @@
 from datetime import datetime, timedelta
 
 import github
+import pymysql
+from warnings import filterwarnings
+filterwarnings('ignore', category = pymysql.Warning)
 
 def _collect(token, org, repo):
     gh = github.GitHub(access_token=token)
@@ -34,8 +37,9 @@ def _collect(token, org, repo):
             git_traffic_rec = [repo_nm, view_per_day['timestamp'][:-10], view_per_day['count'], view_per_day['uniques'],
                                commit_count, forks, stargazers_count, watchers_count, datetime.utcnow(),
                                datetime.utcnow()]
-            count = count + write_to_db(repo, git_traffic_rec=git_traffic_rec)
-        print("records recorded", count)
+            rows_inserted = write_to_db(repo, git_traffic_rec=git_traffic_rec)
+            count = count + rows_inserted
+        print("records recorded:", count)
 
 
 def write_to_db(repo, git_traffic_rec):
