@@ -28,27 +28,23 @@ def _collect(token, org, repo):
             commit_count_dict[date] = commit_count_dict.get(date, 0) + 1
         views_14_days = gh.repos(org, repo_nm).traffic.views.get()
 
-        last_idx = len(views_14_days['views'])
-        if last_idx > 0:
-            view_per_day = views_14_days['views'][last_idx-1]
+        count = 0;
+        for view_per_day in views_14_days['views']:
             commit_count = commit_count_dict.get(view_per_day['timestamp'][:-10], 0)
             git_traffic_rec = [repo_nm, view_per_day['timestamp'][:-10], view_per_day['count'], view_per_day['uniques'],
                                commit_count, forks, stargazers_count, watchers_count, datetime.utcnow(),
-                               datetime.utcnow(), view_per_day['count'], view_per_day['uniques'], commit_count, forks,
-                               stargazers_count, watchers_count, datetime.utcnow()]
-            if str(datetime.utcnow())[:10] == view_per_day['timestamp'][:-10]:
-                print('recorded for today')
-                write_to_db(repo, git_traffic_rec=git_traffic_rec)
+                               datetime.utcnow()]
+            count = count + write_to_db(repo, git_traffic_rec=git_traffic_rec)
+        print("records recorded", count)
 
 
 def write_to_db(repo, git_traffic_rec):
     try:
-        qry = "INSERT INTO git_traffic (repo, date, views, uq_views, cmt_cnt, forks, stargazers_count, watchers_count," \
+        qry = "INSERT IGNORE INTO git_traffic (repo, date, views, uq_views, cmt_cnt, forks, stargazers_count, watchers_count," \
               " row_created, row_updated) " \
-              "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s) " \
-              "ON DUPLICATE KEY UPDATE views = %s, uq_views = %s, cmt_cnt=%s, forks=%s, stargazers_count =%s, " \
-              "watchers_count = %s, row_updated = %s";
-        repo.execute(qry, git_traffic_rec)
+              "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s) "
+        res = repo.execute(qry, git_traffic_rec)
+        return res[0]
     except Exception as e:
         print(repr(e))
 
