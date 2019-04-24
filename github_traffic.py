@@ -20,16 +20,15 @@ def _collect(token, org, repo):
         if commit_since == None:
             commit_since = (dt.utcnow() - td(14)).date()
         page_no = 1
-        commit_info = gh.repos(org)(repo_nm).commits.get(since=str(commit_since), per_page="100", page=str(page_no))
-        temp = commit_info
-        while len(temp) > 0:
-            page_no = page_no + 1
-            temp = gh.repos(org)(repo_nm).commits.get(since=str(commit_since), per_page="100", page=str(page_no))
-
+        commit_info = {}
         commit_count_dict = {}
-        for rec in commit_info:
-            date = dt.strptime(rec['commit']['author']['date'], '%Y-%m-%dT%H:%M:%SZ').date()
-            commit_count_dict[str(date)] = commit_count_dict.get(str(date), 0) + 1
+        while len(commit_info) > 0 or page_no == 1:
+            commit_info = gh.repos(org)(repo_nm).commits.get(since=str(commit_since), per_page="100", page=str(page_no))
+            for rec in commit_info:
+                date = dt.strptime(rec['commit']['author']['date'], '%Y-%m-%dT%H:%M:%SZ').date()
+                commit_count_dict[str(date)] = commit_count_dict.get(str(date), 0) + 1
+            page_no = page_no + 1
+
         views_14_days = gh.repos(org, repo_nm).traffic.views.get()
 
         count = 0;
